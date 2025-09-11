@@ -1,25 +1,26 @@
 import { headers } from 'next/headers';
 import { stripe } from '@/lib/stripe';
+import type Stripe from 'stripe';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   const body = await req.text();
-  const sig = headers().get('stripe-signature')!;
+  const sig = headers().get('stripe-signature') ?? '';
 
-  let event;
+  let event: Stripe.Event;
   try {
     event = await stripe.webhooks.constructEventAsync(
       body,
       sig,
       process.env.STRIPE_WEBHOOK_SECRET!
     );
-  } catch (err: any) {
-    return new Response(`Webhook Error: ${err.message}`, { status: 400 });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'Unknown error';
+    return new Response(`Webhook Error: ${msg}`, { status: 400 });
   }
 
-  // TODO: persist subscription status later
   switch (event.type) {
     case 'checkout.session.completed':
     case 'customer.subscription.updated':
