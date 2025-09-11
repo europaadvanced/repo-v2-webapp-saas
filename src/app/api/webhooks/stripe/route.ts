@@ -1,4 +1,3 @@
-import { headers } from 'next/headers';
 import { stripe } from '@/lib/stripe';
 import type Stripe from 'stripe';
 
@@ -7,7 +6,7 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   const body = await req.text();
-  const sig = headers().get('stripe-signature') ?? '';
+  const sig = req.headers.get('stripe-signature') ?? '';
 
   let event: Stripe.Event;
   try {
