@@ -1,9 +1,10 @@
+mkdir -p app/api/checkout
+cat > app/api/checkout/route.ts <<'TS'
 import { stripe } from '@/lib/stripe';
-import { cookies } from 'next/headers';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { createSupabaseServerClient } from '@/lib/supabase-server';
 
 export async function POST() {
-  const supabase = createRouteHandlerClient({ cookies });
+  const supabase = createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return new Response('Unauthorized', { status: 401 });
 
@@ -16,6 +17,6 @@ export async function POST() {
     cancel_url: `${process.env.SITE_URL}/pricing`,
     allow_promotion_codes: true,
   });
-
   return Response.json({ url: session.url });
 }
+TS
