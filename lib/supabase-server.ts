@@ -1,3 +1,5 @@
+mkdir -p lib
+cat > lib/supabase-server.ts <<'TS'
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
@@ -15,3 +17,4 @@ export function createSupabaseServerClient() {
     }
   );
 }
+TS
