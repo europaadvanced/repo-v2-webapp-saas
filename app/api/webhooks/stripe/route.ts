@@ -10,9 +10,7 @@ export async function POST(req: Request) {
 
   try {
     event = await stripe.webhooks.constructEventAsync(
-      body,
-      sig,
-      process.env.STRIPE_WEBHOOK_SECRET!
+      body, sig, process.env.STRIPE_WEBHOOK_SECRET!
     );
   } catch (err: any) {
     return new Response(`Webhook Error: ${err.message}`, { status: 400 });
@@ -32,9 +30,7 @@ export async function POST(req: Request) {
         current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
       });
     }
-  }
-
-  if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.deleted') {
+  } else if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.deleted') {
     const sub = event.data.object as Stripe.Subscription;
     await supabaseAdmin.from('subscriptions').upsert({
       id: sub.id,
