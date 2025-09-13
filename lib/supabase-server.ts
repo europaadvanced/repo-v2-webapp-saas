@@ -8,15 +8,15 @@ export async function createSupabaseServerClient() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-              getAll() {
-          return store.getAll().map(({ name, value }) => ({ name, value }));
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            store.set({ name, value, ...options });
-          });
-        },
-      },
+        get: (n: string) => store.get(n)?.value,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        set: (n: string, v: string, o?: any) =>
+          store.set({ name: n, value: v, ...o }),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        remove: (n: string, o?: any) =>
+          store.set({ name: n, value: '', ...o, maxAge: 0 }),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any,
     }
   );
 }
