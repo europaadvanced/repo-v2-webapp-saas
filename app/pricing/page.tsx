@@ -1,11 +1,9 @@
 'use client';
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-
+import { useRouter } from 'next/navigation';
 export default function Pricing() {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
-
+  const router = useRouter();
   const subscribe = async () => {
     setLoading(true);
     const res = await fetch('/api/checkout', { method: 'POST' });
@@ -13,7 +11,6 @@ export default function Pricing() {
     const { url } = await res.json();
     window.location.href = url;
   };
-
   return (
     <main className="p-10">
       <h1 className="text-2xl mb-4">Pro plan</h1>
