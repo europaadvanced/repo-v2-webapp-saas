@@ -9,9 +9,14 @@ export async function middleware(req: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get: (n) => req.cookies.get(n)?.value,
-        set: (n, v, o) => res.cookies.set({ name: n, value: v, ...o }),
-        remove: (n, o) => res.cookies.set({ name: n, value: '', ...o, maxAge: 0 })
+              getAll() {
+          return req.cookies.getAll().map(({ name, value }) => ({ name, value }));
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            res.cookies.set({ name, value, ...options });
+          });
+        }
       }
     }
   );
