@@ -1,5 +1,3 @@
-mkdir -p app/api/checkout
-cat > app/api/checkout/route.ts <<'TS'
 import { stripe } from '@/lib/stripe';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 
@@ -17,6 +15,6 @@ export async function POST() {
     cancel_url: `${process.env.SITE_URL}/pricing`,
     allow_promotion_codes: true,
   });
+
   return Response.json({ url: session.url });
 }
-TS
