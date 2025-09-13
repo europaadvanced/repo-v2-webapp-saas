@@ -8,10 +8,14 @@ export async function createSupabaseServerClient() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get: (name) => store.get(name)?.value,
-        set: (name, value, options) => store.set({ name, value, ...options }),
-        remove: (name, options) =>
-          store.set({ name, value: '', ...options, maxAge: 0 }),
+              getAll() {
+          return store.getAll().map(({ name, value }) => ({ name, value }));
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            store.set({ name, value, ...options });
+          });
+        },
       },
     }
   );
