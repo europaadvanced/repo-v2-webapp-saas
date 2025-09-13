@@ -1,11 +1,13 @@
-import { headers } from 'next/headers';
+import { headers as nextHeaders } from 'next/headers';
 import type Stripe from 'stripe';
 import { stripe } from '@/lib/stripe';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
+export const runtime = 'nodejs'; // Stripe needs Node runtime
+
 export async function POST(req: Request) {
   const body = await req.text();
-  const sig = headers().get('stripe-signature');
+  const sig = (await nextHeaders()).get('stripe-signature');
   if (!sig) return new Response('Missing signature', { status: 400 });
 
   let event: Stripe.Event;
