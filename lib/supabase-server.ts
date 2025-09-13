@@ -1,5 +1,3 @@
-mkdir -p lib
-cat > lib/supabase-server.ts <<'TS'
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
@@ -12,9 +10,9 @@ export function createSupabaseServerClient() {
       cookies: {
         get: (name) => store.get(name)?.value,
         set: (name, value, options) => store.set({ name, value, ...options }),
-        remove: (name, options) => store.set({ name, value: '', ...options, maxAge: 0 }),
+        remove: (name, options) =>
+          store.set({ name, value: '', ...options, maxAge: 0 }),
       },
     }
   );
 }
-TS
