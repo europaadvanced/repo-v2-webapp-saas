@@ -5,13 +5,6 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 
 export const runtime = 'nodejs';
 
-type SubLite = {
-  id: string;
-  status: Stripe.Subscription.Status;
-  customer: string | Stripe.Customer | Stripe.DeletedCustomer;
-  current_period_end?: number;
-};
-
 export async function POST(req: Request) {
   const body = await req.text();
   const sig = (await nextHeaders()).get('stripe-signature');
@@ -20,10 +13,12 @@ export async function POST(req: Request) {
   let event: Stripe.Event;
   try {
     event = await stripe.webhooks.constructEventAsync(
-      body, sig, process.env.STRIPE_WEBHOOK_SECRET!
+      body,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET!
     );
-  } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unknown error';
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'Unknown error';
     return new Response(`Webhook Error: ${msg}`, { status: 400 });
   }
 
@@ -31,32 +26,44 @@ export async function POST(req: Request) {
     const s = event.data.object as Stripe.Checkout.Session;
     const subId = s.subscription as string | null;
     const userId = (s.metadata?.user_id as string) || null;
+
     if (subId && userId) {
-      const sub = (await stripe.subscriptions.retrieve(subId)) as unknown as SubLite;
+      const sub = await stripe.subscriptions.retrieve(subId);
+      const firstItem = sub.items?.data?.[0];
       const currentPeriodEndIso =
-        sub.current_period_end != null ? new Date(sub.current_period_end * 1000).toISOString() : null;
+        firstItem != null
+          ? new Date(firstItem.current_period_end * 1000).toISOString()
+          : null;
+
       await supabaseAdmin.from('subscriptions').upsert({
         id: sub.id,
         user_id: userId,
-        stripe_customer_id: typeof sub.customer === 'string' ? sub.customer : (sub.customer as Stripe.Customer).id,
+        stripe_customer_id:
+          typeof sub.customer === 'string'
+            ? sub.customer
+            : (sub.customer as Stripe.Customer).id,
         status: sub.status,
-        current_period_end: currentPeriodEndIso
+        current_period_end: currentPeriodEndIso,
       });
     }
   } else if (
     event.type === 'customer.subscription.updated' ||
     event.type === 'customer.subscription.deleted'
   ) {
-    const sub = event.data.object as unknown as SubLite;
-    const currentPeriodEndIso =
-      sub.current_period_end != null ? new Date(sub.current_period_end * 1000).toISOString() : null;
+    const sub = event.data.object as Stripe.Subscription;
+    const firstItem = sub.items?.data?.[0];
     await supabaseAdmin.from('subscriptions').upsert({
       id: sub.id,
-      stripe_customer_id: typeof sub.customer === 'string' ? sub.customer : (sub.customer as Stripe.Customer).id,
+      stripe_customer_id: sub.customer as string,
       status: sub.status,
-      current_period_end: currentPeriodEndIso
+      current_period_end:
+        firstItem != null
+          ? new Date(firstItem.current_period_end * 1000).toISOString()
+          : null,
     });
   }
 
+  return new Response('ok', { status: 200 });
+}
   return new Response('ok', { status: 200 });
 }
